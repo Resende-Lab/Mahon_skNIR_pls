@@ -1,7 +1,5 @@
-# modified RUNME_NIR.R
-# simplified, delete unnecessary packages, convert whole code to a function 
-# should add iteration
-# check spec range for TC 
+# modified RUNME_NIR.R  04/29/26
+
 
 ############################################################################################
 ###        Prediction of phytoglycogen content in sweet corn using 
