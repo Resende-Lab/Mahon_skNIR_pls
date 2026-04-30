@@ -71,38 +71,27 @@ PLS_stats <- function(trait, ncomp, k_fold = 10, seg = 10) {
   #----------- 3.7 read calibration dataset 
   # weight
   if (dataset == "w") {
-    dat <- read.csv("weight_WL.NIR.csv") 
-    d = dat[,grep("weight",colnames(dat))] 
+    d <- read.csv("weight_WL.NIR.csv") 
     d = dat[dat$cv_weight < 0.10, ]
     
     # Phytoglycogen
   } else if (dataset == "pg") {
-    dat <- read.csv("PG_WL.NIR.csv") 
+    d <- read.csv("PG_WL.NIR.csv") 
     
     # sugars, starch
   } else if (dataset == "s") {
-    dat <- read.csv("sugars_WL.NIR.csv")
+    d <- read.csv("sugars_WL.NIR.csv")
     if (trait != "total_carbohydrates_mg") {
       cv <- paste0("cv_", gsub("_(mg|PCT)$", "", trait))
-      dt <- dat %>%  filter(dat[, cv] < 0.11)
+      d <- dat %>%  filter(dat[, cv] < 0.11)
     }
   }
+  d <- d[!(is.na(d[,trait])), ]
   
-  #----------- 3.8 data.frame with genotype + measured + NIR
-  d <- dat[!(is.na(dat[,trait])), ]
+  #----------- 3.8 data.frame with genotype + measured + NIR  
   NIR <- select(d, num_range("X", 940:1640)) %>%  as.matrix()
   data <- data.frame(d[,c("genotype",trait)], I(NIR)) 
-  data.g <- select(data, genotype, trait) %>% group_by(genotype) %>% summarise_all(mean)
-  
-  
-  #----------- 3.9 sample stats dataframe
-  sample_stats <- data.frame(type = c("individual", "genotype"),
-                             Size = c(nrow(data), nrow(data.g)),
-                             Mean = c(round(mean(data[,trait]),2),round(mean(data[,trait]),2)),
-                             SD = c(round(sd(data[,trait]),2),round(sd(data[,trait]),2)),
-                             Min = c(round(min(data[,trait]),2),round(min(data[,trait]),2)),
-                             Max = c(round(max(data[,trait]),2),round(max(data[,trait]),2)))
-  print(sample_stats)
+
           
           ###-----------------------------------
           ####---- 4. Deploy the model
@@ -187,7 +176,6 @@ PLS_stats <- function(trait, ncomp, k_fold = 10, seg = 10) {
       .fns = mean))
   
   print(model_stats_mean)
-  output["sample stats"] <- list(sample_stats)
   output["model_stats"] <- list(model_stats)
   output["model_stats_mean"] <- list(model_stats_mean)
   return(output)
