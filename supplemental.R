@@ -153,7 +153,7 @@ iters = 5
 data <- c()
 for (i in genos) {
   d <- dt[dt$genotype == i, ]
-  t <- d[sample(n_row, 1, replace = TRUE),]
+  t <- d[sample(nrow(d), 1),]
   data <- rbind(data, t)
 }
 
