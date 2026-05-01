@@ -15,7 +15,8 @@ the analyses for all traits. The user should only change the trait name and spec
 
 If you have any questions about the analyses, please, contact me!
 
-Marco
+Marco and Noriko
+
 
 
 Dr. Marco Antonio Peixoto  
