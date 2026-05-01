@@ -1,6 +1,3 @@
-# modified RUNME_NIR.R  04/29/26
-
-
 ############################################################################################
 ###        Prediction of phytoglycogen content in sweet corn using 
 ###             Single-kernel Near-Infrared spectroscopy 
@@ -9,7 +6,8 @@
 ###   doi: 
 ### 
 ############################################################################################
-rm(list = ls())
+
+  rm(list = ls())
 
 
 ###-----------------------------------
@@ -27,24 +25,20 @@ library(pls)
 PLS_stats <- function(trait, ncomp, k_fold = 10, seg = 10) {
   cat(trait, "\n")
   
+  #----------- 1. Functions
   # SNV function
   SNV <- function(nir) { 
     nir <- as.matrix(nir)
     NIRsnv <- t(scale(t(nir), center = TRUE, scale = TRUE))
     return(NIRsnv)
   }   
-  # RPD function
+ 
+   # RPD function
   RPD <- function(measured, RMSEP) {
     sd(measured)/RMSEP
   }
   
-            ###-----------------------------------
-            ####---- 3. Traits
-            ###-----------------------------------
-  
-
-  
-  #----------- 3.4 Dataset loading
+  #----------- 2. Dataset loading
   
   # dataset
   if (trait == "weight_mg") {
@@ -56,7 +50,7 @@ PLS_stats <- function(trait, ncomp, k_fold = 10, seg = 10) {
   }
   
   
-  #----------- 3.5 Spectra pre-treatment
+  #----------- 3. Spectra pre-treatment
   
   if (trait %in% c("starch_PCT","glucose_PCT", "PG_PCT")) {
     spec = "snv"
@@ -64,15 +58,11 @@ PLS_stats <- function(trait, ncomp, k_fold = 10, seg = 10) {
     spec = "raw"
   }
   
-  #----------- 3.6 Threshold for Coefficient of variation (CV = sd/mean).
-  # KW: cv = 0.1
-  # ST, sugars(exclude PG, TC): cv = 0.11
-  
-  #----------- 3.7 read calibration dataset 
+  #----------- 4 read calibration dataset 
   # weight
   if (dataset == "w") {
     d <- read.csv("weight_WL.NIR.csv") 
-    d = dat[dat$cv_weight < 0.10, ]
+    d = d[d$cv_weight < 0.10, ]
     
     # Phytoglycogen
   } else if (dataset == "pg") {
@@ -83,32 +73,27 @@ PLS_stats <- function(trait, ncomp, k_fold = 10, seg = 10) {
     d <- read.csv("sugars_WL.NIR.csv")
     if (trait != "total_carbohydrates_mg") {
       cv <- paste0("cv_", gsub("_(mg|PCT)$", "", trait))
-      d <- dat %>%  filter(dat[, cv] < 0.11)
+      d <- d %>%  filter(d[, cv] < 0.11)
     }
   }
   d <- d[!(is.na(d[,trait])), ]
   
-  #----------- 3.8 data.frame with genotype + measured + NIR  
-  NIR <- select(d, num_range("X", 940:1640)) %>%  as.matrix()
+  #----------- 5 data.frame with genotype + measured + NIR  
+  #NIR <- select(d, num_range("X", 940:1640)) %>%  as.matrix()
+  NIR <- d[, c(paste0("X", 940:1640))] %>%  as.matrix()
   data <- data.frame(d[,c("genotype",trait)], I(NIR)) 
 
-          
-          ###-----------------------------------
-          ####---- 4. Deploy the model
-          ###-----------------------------------
-          
-  #----------- 4.1 Create objects to hold results
+  #----------- 6 Create objects to hold results
   
   output = list()
   model_stats = c()                   
   Res = c() # for predicted values. cols=(genotype, trait(measured), pred)
   
-  #----------- 4.2 Model
+  #----------- 7. Model
   
-  cat("iter ")
   # 10 iterations
   for (iter in 1:10) {
-    cat(iter)
+    cat("iter ", "\n")
     set.seed(iter)
     dat <- data %>%  mutate(set = sample(1:k_fold, nrow(data), replace = TRUE))
     
@@ -129,7 +114,7 @@ PLS_stats <- function(trait, ncomp, k_fold = 10, seg = 10) {
       
       # predict test data (outer-validation) with train.pls
       t <- test %>% 
-        select(genotype, all_of(trait)) %>% 
+        select(genotype, dplyr::all_of(trait)) %>% 
         mutate(predicted = predict(train.pls, ncomp = ncomp, newdata = test) )
       # data
       Res <- rbind(Res, t)   #cols = c("genotype", trait(measured), "pred")                                      
@@ -140,7 +125,7 @@ PLS_stats <- function(trait, ncomp, k_fold = 10, seg = 10) {
       summarise(across(.col = 1:2, mean)) %>%
       as.data.frame()  
     
-    ##----------- 4.3 Results
+    ##----------- 8. Results
     
     # Individual: correlation, RMSEP, RPD   
     X = Res[,trait]
@@ -186,15 +171,18 @@ PLS_stats <- function(trait, ncomp, k_fold = 10, seg = 10) {
 ####--- RUN
 ###------------------
 
+
+
+#----------- 1. Running
 result <- list()
 result[[trait]] <- PLS_stats(trait = trait, ncomp = ncomp)
 
-#----------- Specify the trait and ncomp below it
-#----------- 3.1 Observation
+
+#----------- 2. Observation
 # Obs.: After carefully analyzing the data, we found that every trait has one
 # number of components that better fit the data.
-# For the list of traits, one component will be selected.
-
+# For the list of traits, a different component will be selected.
+# Specify the trait and ncomp below it
 
 # # (KW)
 trait = "weight_mg"
