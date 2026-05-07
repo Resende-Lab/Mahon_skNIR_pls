@@ -79,7 +79,7 @@ PLS_stats <- function(trait, ncomp, k_fold = 10, seg = 10) {
   d <- d[!(is.na(d[,trait])), ]
   
   #----------- 5 data.frame with genotype + measured + NIR  
-  #NIR <- select(d, num_range("X", 940:1640)) %>%  as.matrix()
+  
   NIR <- d[, c(paste0("X", 940:1640))] %>%  as.matrix()
   data <- data.frame(d[,c("genotype",trait)], I(NIR)) 
 
@@ -87,13 +87,12 @@ PLS_stats <- function(trait, ncomp, k_fold = 10, seg = 10) {
   
   output = list()
   model_stats = c()                   
-  Res = c() # for predicted values. cols=(genotype, trait(measured), pred)
   
   #----------- 7. Model
   
   # 10 iterations
   for (iter in 1:10) {
-    cat("iter ", "\n")
+    cat("iter", iter, "\n")
     set.seed(iter)
     dat <- data %>%  mutate(set = sample(1:k_fold, nrow(data), replace = TRUE))
     
